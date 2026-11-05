@@ -1,0 +1,22 @@
+# Secrets: NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Installed packages (huge, can be re-installed with npm install)
+node_modules/
+
+# Expo / build output
+.expo/
+dist/
+web-build/
+*.apk
+*.aab
+
+# Logs
+*.log
+npm-debug.log*
+
+# Operating system junk
+.DS_Store
+Thumbs.db
