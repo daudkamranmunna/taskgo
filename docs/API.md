@@ -6,13 +6,14 @@ All routes under /api need the header `Authorization: Bearer <supabase access_to
 ## Response shape
 - Success: `{ "data": ..., "error": null }`
 - Failure: `{ "data": null, "error": { "message": "..." } }` with a proper HTTP status code
+- Every endpoint below shows what goes inside `data`. This includes /health.
 
 ## Dates
 The app sends its own local date as YYYY-MM-DD (`today`, `session_date`, `due_date`). The backend never guesses the date. `days_left` is computed by the backend from `today` (negative = overdue).
 
 ## Endpoints
 
-| Method | Path | Body / Query | Returns |
+| Method | Path | Body / Query | Returns (inside data) |
 |--------|------|--------------|---------|
 | GET | /health | none | `{ status: "ok" }` |
 | GET | /api/profile | none | `{ id, display_name, daily_goal_minutes }` |
@@ -32,6 +33,11 @@ The app sends its own local date as YYYY-MM-DD (`today`, `session_date`, `due_da
 | GET | /api/stats/xp | none | `{ xp, level, xp_into_level, xp_for_next_level, progress (0 to 1) }` |
 | GET | /api/badges | none | all badges with `{ earned, earned_at }` |
 | GET | /api/quotes/random | none | `{ text, author }` |
+
+## Error replies
+- 401: missing, invalid or expired login token
+- 404: route not found
+- 500: unexpected server error (the real error is only written to the server log)
 
 ## Rules
 - Task sorting: open tasks first by due_date ascending (no date last), then priority (exam, high, medium, low); done tasks after, newest done first.
