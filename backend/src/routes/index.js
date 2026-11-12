@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { ok } from '../utils/response.js';
 import { requireAuth } from '../middleware/auth.js';
+import profileRoutes from './profile.routes.js';
+import sessionsRoutes from './sessions.routes.js';
+import tasksRoutes from './tasks.routes.js';
+import statsRoutes from './stats.routes.js';
+import badgesRoutes from './badges.routes.js';
+import quotesRoutes from './quotes.routes.js';
 
 const router = Router();
 
@@ -12,6 +18,11 @@ router.get('/health', (req, res) => {
 // Everything under /api needs a valid login token.
 router.use('/api', requireAuth);
 
-// The /api routes (profile, sessions, tasks, ...) are added in Step 4.
+router.use('/api/profile', profileRoutes);
+router.use('/api/sessions', sessionsRoutes);
+router.use('/api/tasks', tasksRoutes);
+router.use('/api/stats', statsRoutes);
+router.use('/api/badges', badgesRoutes);
+router.use('/api/quotes', quotesRoutes);
 
 export default router;
