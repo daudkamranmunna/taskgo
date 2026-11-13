@@ -23,3 +23,10 @@ AppState.addEventListener('change', (state) => {
     supabase.auth.stopAutoRefresh();
   }
 });
+
+// Returns the current login token (renewed if it had expired), or null if
+// nobody is logged in. Used by api.js to prove who we are to our backend.
+export async function getAccessToken() {
+  const { data } = await supabase.auth.getSession();
+  return data.session ? data.session.access_token : null;
+}

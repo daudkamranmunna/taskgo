@@ -11,24 +11,29 @@
   - All endpoints in docs/API.md exist; tested with fake data AND end to end with a real login token (all checks passed)
 - Step 5 (deploy to Render): DONE
 - Step 6 (mobile skeleton): DONE
-  - Expo app in /mobile, theme.js, config.js, 6 base components, 5 placeholder tabs
 - Step 7 (auth): DONE
-  - mobile/.env (not committed) with the three EXPO_PUBLIC_ values; mobile/.env.example is committed
-  - src/lib/supabase.js (client with AsyncStorage, auto token refresh only while the app is open)
-  - src/context/AuthContext.js: AuthProvider, useAuth(); signUp(name, email, password), signIn, signOut each return { error } with a friendly message; session restored on startup
-  - Screens: app/(auth)/login.js, register.js (validation, error box, loading button); app/index.js redirects to login or tabs (spinner while checking)
-  - Route guard in app/_layout.js with Stack.Protected: (tabs) only when logged in, (auth) only when logged out
-  - Temporary Log out button (with confirmation) on the Profile placeholder
-  - Tested on phone: register, login, wrong password, validation, logout, reload, full app restart (login persists), profile row gets the display name from signup
+  - supabase.js, AuthContext, login/register, route guard (Stack.Protected), session persists across full restarts
+- Step 8 (api.js, Home, Profile): DONE
+  - src/lib/api.js: the only file that calls the backend; one function per endpoint; attaches the Bearer token; 70 second timeout (Render free server wakes slowly); throws Error with a readable message
+  - supabase.js has getAccessToken() (used by api.js)
+  - src/utils/date.js (todayString, shortWeekday, formatShortDate, deadlineLabel, isOverdue), src/utils/format.js (formatMinutes, formatClock)
+  - Components added: ProgressRing (60 rotated bars, no chart library), StreakCard, DeadlineCard
+  - Home screen: greeting, streak card, today's goal ring, Start Studying button (opens Timer tab), up to 3 deadlines (tap opens Tasks tab for now), random quote; pull to refresh; reloads when the tab is focused; loading, error and retry states
+  - Profile screen: name, email, daily goal stepper (5 min to 12 h) saved through the API, about text, version, logout with confirmation
+  - Tested on phone with sample data: streak 4, goal ring 30 of 60 min, 3 deadlines (overdue, today, in 5 days)
 
 ## Deployment
-- Public API URL (use as EXPO_PUBLIC_API_URL): https://taskgo-api.onrender.com
+- Public API URL (use as EXPO_PUBLIC_API_URL): PASTE-YOUR-RENDER-URL-HERE
 - Free instance sleeps after 15 minutes without traffic; the first request afterwards takes 30 to 60 seconds. Open <URL>/health once before a demo to wake it up.
 - Render redeploys automatically when new commits are pushed to main
 
 ## Current
-- Step 8: src/lib/api.js + Home screen (streak card, goal progress ring, quote, deadline card, Start Studying button) + Profile screen (name, edit daily goal, logout)
-- Exact next action: create src/lib/api.js (all API calls with the Bearer token, standard { data, error } handling)
+- Step 9: Tasks screen + task-form + TaskItem + deadline labels + mark done (with the badge popup)
+- Exact next action: create src/components/TaskItem.js and BadgeItem/BadgePopup as needed, then app/(tabs)/tasks.js and app/task-form.js. Declare task-form inside the logged-in Stack.Protected group in app/_layout.js. Then change the Home deadline tap to open the task form.
+
+## Sample data in the database (REMOVE before the final demo)
+- Inserted by SQL for the developer's own account: 4 study sessions (today, 1, 2 and 3 days ago, 20 to 40 minutes) and 3 tasks (Physics exam in 5 days, Math assignment due today, Old lab report overdue by 2 days)
+- Because they were inserted directly, no badges were awarded. The next real session saved through the app will award first_session and streak_3 (streak is 4)
 
 ## Decisions / deviations
 - Terminal in VS Code is Git Bash (bash), so use bash commands
@@ -41,12 +46,15 @@
 - XP: xp_for_next_level means the size of the current level, so progress = xp_into_level / xp_for_next_level (documented in API.md)
 - The Expo starter put screens in mobile/src/app; we moved them to mobile/app. There are THREE _layout.js files: app/_layout.js (root, with the route guard), app/(tabs)/_layout.js (tab bar), app/(auth)/_layout.js (plain Stack). Do not mix them up.
 - When new stack screens are added (task-form, history, badges), they must be declared inside the logged-in Stack.Protected group in app/_layout.js
+- StreakCard shows "10 minutes" as plain text (display only); the backend decides what counts as an active day
+- Home reloads on every focus but keeps the same quote until pull-to-refresh
 - TypeScript leftovers from the starter (tsconfig.json, expo-env.d.ts) are kept; all our code is plain JavaScript (listed in docs/STRUCTURE.md)
 - After changing mobile/.env, restart Expo with `npx expo start -c`
 - Dark mode is planned for Phase 2, Step 13. Colors live in src/constants/theme.js.
 - A VS Code Copilot suggestion sometimes shows grey text in the terminal; ignore it and press Ctrl+C
 - Backend test blocks that start with `node --input-type=module <<'EOF'` must be run from ~/taskgo/backend
 - Two terminals are in use: the Expo terminal (stays busy) and a free terminal for other commands
+- The user's time zone is Asia/Dhaka; SQL that creates sample dates should use (now() at time zone 'Asia/Dhaka')::date
 
 ## Known bugs
 - None known
@@ -57,15 +65,4 @@
 - supabase/schema.sql, supabase/seed.sql
 - backend/: package.json, package-lock.json, .env (not committed), .env.example, and all files in src/ listed in docs/STRUCTURE.md
 - mobile/: package.json, app.json, .env (not committed), .env.example, plus Expo starter files listed in docs/STRUCTURE.md
-- mobile/app/_layout.js, index.js, (auth)/_layout.js, login.js, register.js, (tabs)/_layout.js, home.js, tasks.js, timer.js, progress.js, profile.js
-- mobile/src/constants/theme.js, config.js
-- mobile/src/lib/supabase.js
-- mobile/src/context/AuthContext.js
-- mobile/src/components/ScreenContainer.js, Card.js, Button.js, Input.js, LoadingView.js, EmptyState.js
-
-## Env variable names (no secrets)
-- Backend: PORT, SUPABASE_URL, SUPABASE_ANON_KEY
-- Mobile: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_URL
-
-## Hours used so far
-- (13 hours)
+- mobile/app/_layout.js, index.js, (auth)/_layout.js, login.js, register.js, (tabs)/_layout.js, home.js, profile.js (real), tasks.js, timer.js, progress.js
