@@ -1,8 +1,35 @@
-// Root layout: the frame that wraps every screen of the app.
-// Later (Step 7) the login check will be added here.
+// Root layout: wraps every screen and guards the routes.
+//   (tabs) is only reachable when logged in
+//   (auth) is only reachable when logged out
+// While we are still checking for a saved login (initializing), both are
+// closed, so only the start screen (index) shows its spinner.
 import { Stack } from 'expo-router';
+import { AuthProvider, useAuth } from '../src/context/AuthContext';
+
+function RootNavigator() {
+  const { session, initializing } = useAuth();
+  const loggedIn = !initializing && !!session;
+  const loggedOut = !initializing && !session;
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+
+      <Stack.Protected guard={loggedIn}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={loggedOut}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
-  // headerShown: false hides the default top bar, we design our own
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
 }
