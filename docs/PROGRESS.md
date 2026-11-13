@@ -22,7 +22,7 @@
   - Tested on phone: register, login, wrong password, validation, logout, reload, full app restart (login persists), profile row gets the display name from signup
 
 ## Deployment
-- Public API URL (use as EXPO_PUBLIC_API_URL): PASTE-YOUR-RENDER-URL-HERE
+- Public API URL (use as EXPO_PUBLIC_API_URL): https://taskgo-api.onrender.com
 - Free instance sleeps after 15 minutes without traffic; the first request afterwards takes 30 to 60 seconds. Open <URL>/health once before a demo to wake it up.
 - Render redeploys automatically when new commits are pushed to main
 
@@ -68,4 +68,4 @@
 - Mobile: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_URL
 
 ## Hours used so far
-- (14 hours)
+- (13 hours)
