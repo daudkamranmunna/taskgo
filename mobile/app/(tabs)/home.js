@@ -12,7 +12,7 @@ import StreakCard from '../../src/components/StreakCard';
 import DeadlineCard from '../../src/components/DeadlineCard';
 import { api } from '../../src/lib/api';
 import { todayString } from '../../src/utils/date';
-import { formatMinutes } from '../../src/utils/format';
+import { formatMinutes, taskFormHref } from '../../src/utils/format';
 import { colors, fontSize, spacing } from '../../src/constants/theme';
 
 function greeting() {
@@ -155,8 +155,8 @@ export default function Home() {
         style={styles.startButton}
       />
 
-      {/* Step 9 will make a tap open the task. For now it opens the Tasks tab. */}
-      <DeadlineCard tasks={upcoming} onTaskPress={() => router.push('/(tabs)/tasks')} />
+      {/* Tapping a deadline opens that task in the task form */}
+      <DeadlineCard tasks={upcoming} onTaskPress={(task) => router.push(taskFormHref(task))} />
 
       {quote ? (
         <Card>

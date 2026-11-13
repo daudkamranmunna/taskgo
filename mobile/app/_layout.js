@@ -1,8 +1,9 @@
 // Root layout: wraps every screen and guards the routes.
-//   (tabs) is only reachable when logged in
+//   (tabs) and task-form are only reachable when logged in
 //   (auth) is only reachable when logged out
 // While we are still checking for a saved login (initializing), both are
 // closed, so only the start screen (index) shows its spinner.
+// Later screens (history, badges) must be added to the logged-in group too.
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 
@@ -17,6 +18,7 @@ function RootNavigator() {
 
       <Stack.Protected guard={loggedIn}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="task-form" />
       </Stack.Protected>
 
       <Stack.Protected guard={loggedOut}>
