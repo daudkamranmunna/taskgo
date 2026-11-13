@@ -8,20 +8,24 @@
   - Project `taskgo`, email confirmation off, schema.sql and seed.sql run (6 tables, RLS on, 10 badges, 34 quotes)
 - Step 3 (backend skeleton): DONE
 - Step 4 (backend features): DONE
-  - All endpoints in docs/API.md exist (profile, sessions, tasks, stats, streak, weekly, xp, badges, quotes)
-  - Tested with fake data (streak maths, task sorting, XP levels) AND end to end with a real login token: every check passed (signup trigger, RLS, badges, streaks, deletes)
+  - All endpoints in docs/API.md exist; tested with fake data AND end to end with a real login token (all checks passed)
 - Step 5 (deploy to Render): DONE
-  - Render web service `taskgo-api`, free instance, root directory `backend`, build `npm install`, start `npm start`, health check path /health
-  - Env vars set on Render: SUPABASE_URL, SUPABASE_ANON_KEY (PORT is set by Render)
+  - Render web service `taskgo-api`, free instance, root directory `backend`, health check /health
+- Step 6 (mobile skeleton): DONE
+  - Expo app in /mobile (Expo Router, plain JavaScript screens), runs in Expo Go on the phone
+  - 8 packages installed: supabase-js, async-storage, url-polyfill, keep-awake, haptics, notifications, vector-icons, datetimepicker
+  - src/constants/theme.js and config.js
+  - Base components: ScreenContainer, Card, Button, Input, LoadingView, EmptyState
+  - 5 bottom tabs (Home, Tasks, Timer, Progress, Profile) with placeholder screens
 
 ## Deployment
-- Public API URL (use as EXPO_PUBLIC_API_URL): PASTE-YOUR-RENDER-URL-HERE
+- Public API URL (use as EXPO_PUBLIC_API_URL): (https://taskgo-api.onrender.com)
 - Free instance sleeps after 15 minutes without traffic; the first request afterwards takes 30 to 60 seconds. Open <URL>/health once before a demo to wake it up.
 - Render redeploys automatically when new commits are pushed to main
 
 ## Current
-- Step 6: Mobile skeleton (create the Expo app inside /mobile, install packages, theme, base components, 5-tab navigation with placeholder screens, run in Expo Go)
-- Exact next action: create the Expo app with `npx create-expo-app@latest` inside ~/taskgo (Mobile terminal)
+- Step 7: Auth (supabase client, AuthContext, login/register screens, route guard, logout, session persistence). Most careful step; test thoroughly.
+- Exact next action: create mobile/.env with the three EXPO_PUBLIC_ values (Supabase URL, publishable key, Render API URL), then write src/lib/supabase.js
 
 ## Decisions / deviations
 - Terminal in VS Code is Git Bash (bash), so use bash commands
@@ -32,9 +36,12 @@
 - Studied minutes are rounded down everywhere; a day is active at 10+ minutes
 - best_day is { date: null, minutes: 0 } when nothing was studied this week
 - XP: xp_for_next_level means the size of the current level, so progress = xp_into_level / xp_for_next_level (documented in API.md)
-- The GET /api/stats/xp handler lives in stats.controller.js, calculation in services/xp.service.js
+- The Expo starter put screens in mobile/src/app; we moved them to mobile/app. There are TWO _layout.js files: app/_layout.js (root Stack) and app/(tabs)/_layout.js (tab bar). Do not mix them up.
+- TypeScript leftovers from the starter (tsconfig.json, expo-env.d.ts) are kept; all our code is plain JavaScript (listed in docs/STRUCTURE.md)
+- After changing mobile/.env, restart Expo with `npx expo start -c`
 - A VS Code Copilot suggestion sometimes shows grey text in the terminal; ignore it and press Ctrl+C
-- Test blocks that start with `node --input-type=module <<'EOF'` must be run from ~/taskgo/backend
+- Backend test blocks that start with `node --input-type=module <<'EOF'` must be run from ~/taskgo/backend
+- Two terminals are in use: server/Expo terminal (stays busy) and a free terminal for other commands
 
 ## Known bugs
 - None known
@@ -43,19 +50,15 @@
 - .gitignore, README.md
 - docs/MASTER_PROMPT.md, PROGRESS.md, API.md, DATABASE.md, STRUCTURE.md
 - supabase/schema.sql, supabase/seed.sql
-- backend/package.json, package-lock.json, .env (not committed), .env.example
-- backend/src/index.js, app.js
-- backend/src/config/env.js
-- backend/src/lib/supabase.js
-- backend/src/middleware/auth.js, errorHandler.js
-- backend/src/utils/response.js, dates.js
-- backend/src/routes/index.js, profile.routes.js, sessions.routes.js, tasks.routes.js, stats.routes.js, badges.routes.js, quotes.routes.js
-- backend/src/controllers/profile.controller.js, sessions.controller.js, tasks.controller.js, stats.controller.js, badges.controller.js, quotes.controller.js
-- backend/src/services/streak.service.js, stats.service.js, badges.service.js, xp.service.js
+- backend/: package.json, package-lock.json, .env (not committed), .env.example, and all files in src/ listed in docs/STRUCTURE.md (index.js, app.js, config, lib, middleware, utils, routes, controllers, services)
+- mobile/: package.json, app.json, .env.example (no .env yet), plus Expo starter files listed in docs/STRUCTURE.md
+- mobile/app/_layout.js, index.js (redirects to /(tabs)/home), (tabs)/_layout.js, home.js, tasks.js, timer.js, progress.js, profile.js
+- mobile/src/constants/theme.js, config.js
+- mobile/src/components/ScreenContainer.js, Card.js, Button.js, Input.js, LoadingView.js, EmptyState.js
 
 ## Env variable names (no secrets)
 - Backend: PORT, SUPABASE_URL, SUPABASE_ANON_KEY
-- Mobile (Step 6): EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_URL
+- Mobile: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_URL
 
 ## Hours used so far
-- About 10 hours (planned for Steps 0 to 5: about 10)
+- (12 hours)
