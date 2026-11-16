@@ -1,7 +1,7 @@
-// Profile screen: your name, daily goal (editable), app info and logout.
+// Profile screen: your name, daily goal (editable), badges link, app info and logout.
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../src/components/ScreenContainer';
 import Card from '../../src/components/Card';
@@ -24,6 +24,7 @@ function stepGoal(value, direction) {
 }
 
 export default function Profile() {
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState(null);
   const [goal, setGoal] = useState(60); // the goal being edited (not saved yet)
@@ -185,6 +186,12 @@ export default function Profile() {
         <Text style={styles.version}>Version {APP_VERSION}</Text>
       </Card>
 
+      <Button
+        title="Badges"
+        variant="secondary"
+        onPress={() => router.push('/badges')}
+        style={styles.badgesButton}
+      />
       <Button title="Log out" variant="danger" onPress={confirmLogout} />
     </ScreenContainer>
   );
@@ -255,4 +262,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.small,
     color: colors.muted,
   },
+  badgesButton: { marginBottom: spacing.md },
 });
