@@ -13,15 +13,14 @@
 - Step 6 (mobile skeleton): DONE
 - Step 7 (auth): DONE
 - Step 8 (api.js, Home, Profile): DONE
-  - src/lib/api.js is the only file that calls the backend (70 second timeout for Render's slow wake-up)
-  - Home: greeting, streak card, goal ring, Start Studying, up to 3 deadlines, quote; Profile: name, daily goal stepper, logout
 - Step 9 (Tasks): DONE
-  - app/(tabs)/tasks.js: Open/Done filter tabs, TaskItem rows (checkbox, subject and priority chips, note preview, deadline label, Start button, delete with confirmation), pull to refresh, floating + button, empty/loading/error states, badge popup when a completed task earns a badge
-  - app/task-form.js: add or edit (title required, subject chips + custom text for "Other", priority selector, optional due date with the date picker and a clear button, optional note); edit mode gets the task fields through route params
-  - Components added: TaskItem, BadgePopup (BadgePopup is reused by the Timer in Step 10)
-  - utils/format.js now also has taskFormHref(task) (route to the edit form) and timerHref(task) (route to the Timer with params taskId, taskTitle, subject)
-  - Home deadline rows open the task form
-  - Tested on phone: add, edit, clear date, custom subject, delete, mark done and un-done, Task Starter badge popup on the 5th completed task, persistence after restart
+  - Tasks list, task-form (add/edit), TaskItem, BadgePopup
+- Step 10 (Timer): DONE
+  - src/utils/alarm.js: ALL ringing logic (permission, Android channel with three fallback setups, scheduleTimerEnd, cancelTimerEnd, vibrateAlarm, getLastAlarmError, getChannelInfo)
+  - src/components/CustomTimerModal.js: whole minutes from 1 to 600, friendly errors, quick chips; exports parseCustomMinutes
+  - app/(tabs)/timer.js: stopwatch and countdowns (25 / 45 / 60 / custom), subject chips or the task's locked subject (route params taskId, taskTitle, subject), time from Date.now() timestamps, screen kept awake while running, alarm scheduled for the exact end time, pause cancels it and resume re-schedules the remaining time, finish early cancels it, "Time's up!" with vibration when the app is open, sessions under 1 minute are not saved
+  - After a session: it saves automatically (POST /api/sessions), a retry button appears if it fails (no duplicate saves), optional note (PUT /api/sessions/:id), "Mark this task as done?" for task sessions, BadgePopup for session and task badges
+  - Tested on the phone: countdown, stopwatch, pause/resume, early finish, task link, notes, badges, failed save + retry, ring with the app open, in the background and with the phone locked, pause/finish cancelling the ring
 
 ## Deployment
 - Public API URL (use as EXPO_PUBLIC_API_URL): PASTE-YOUR-RENDER-URL-HERE
@@ -29,14 +28,22 @@
 - Render redeploys automatically when new commits are pushed to main
 
 ## Current
-- Step 10: Timer screen. Stopwatch + countdown presets 25/45/60 + custom countdown (1 to 600 whole minutes, CustomTimerModal), subject chips or the task's locked subject, timestamp-based time (Date.now()), keep screen awake, ringing notification scheduled for the exact end time via src/utils/alarm.js, vibration, "Time's up!", auto-save the session, optional note, "Mark this task as done?", BadgePopup
-- The Timer receives optional route params taskId, taskTitle, subject (from the Tasks screen Start button)
-- Exact next action: check what Expo Go supports for local notifications on the user's phone, then write src/utils/alarm.js first (permission, Android channel, schedule, cancel, vibrate), then the timer screen in small parts
-- Test the ring with a 1 minute custom timer, both with the app open and with the app in the background
+- Step 11: History + Progress + Badges screens
+  - app/history.js (stack screen, opened from Progress): sessions grouped by date with daily totals, linked task title and note, delete with confirmation, pull to refresh
+  - app/(tabs)/progress.js: weekly bar chart (BarChart, plain Views), total / average / best day cards, 28-day streak calendar (StreakCalendar), buttons to History and Badges
+  - app/badges.js (stack screen, opened from Progress and Profile): grid of all badges (BadgeItem), earned ones colored, locked ones gray with their requirement
+  - New components: BarChart, StreakCalendar, SessionItem, BadgeItem. history and badges must be declared inside the logged-in Stack.Protected group in app/_layout.js
+  - STRETCH only if on schedule: XPBar on Home and Profile (GET /api/stats/xp already exists)
+- Exact next action: BarChart + the Progress screen first, then History, then Badges
+
+## Known limitations (explain honestly in the README)
+- The running timer lives in the app's memory. If the app is swiped away completely while a timer runs, that session is lost (a scheduled alarm still rings). Backgrounding and locking the phone are fine.
+- A session whose countdown ended while the app was in the background is saved when the user opens the app again (with the planned duration).
+- In Expo Go on the developer's Xiaomi Redmi Note 11 Pro, creating the custom Android notification channel fails (native NullPointerException). alarm.js falls back to Expo Go's default channel. For the ring to have sound the user enabled sound for Expo Go's notification category in the phone settings; vibration while the app is in the background depends on that category's vibration setting.
+- Expo Go cannot use custom notification sounds; a standalone build (optional APK, Step 15) would be needed.
 
 ## Sample data in the database (REMOVE before the final demo)
-- Inserted by SQL for the developer's own account: 4 study sessions (today, 1, 2 and 3 days ago, 20 to 40 minutes) and 3 sample tasks; plus tasks created while testing
-- Because the sessions were inserted directly, no session badges were awarded yet. The next real session saved through the app will award first_session and streak_3.
+- Inserted by SQL for the developer's own account: 4 study sessions (today, 1, 2 and 3 days ago) and 3 sample tasks; plus sessions and tasks created while testing
 
 ## Decisions / deviations
 - Terminal in VS Code is Git Bash (bash), so use bash commands
@@ -47,14 +54,13 @@
 - Studied minutes are rounded down everywhere; a day is active at 10+ minutes
 - best_day is { date: null, minutes: 0 } when nothing was studied this week
 - XP: xp_for_next_level means the size of the current level, so progress = xp_into_level / xp_for_next_level (documented in API.md)
-- The Expo starter put screens in mobile/src/app; we moved them to mobile/app. There are THREE _layout.js files: app/_layout.js (root, with the route guard), app/(tabs)/_layout.js (tab bar), app/(auth)/_layout.js (plain Stack). Do not mix them up.
-- Stack screens outside the tabs (task-form now; history and badges later) must be declared inside the logged-in Stack.Protected group in app/_layout.js
-- StreakCard shows "10 minutes" as plain text (display only); the backend decides what counts as an active day
-- Home reloads on every focus but keeps the same quote until pull-to-refresh
+- There are THREE _layout.js files: app/_layout.js (root, with the route guard), app/(tabs)/_layout.js (tab bar), app/(auth)/_layout.js (plain Stack). Do not mix them up.
+- Stack screens outside the tabs (task-form now; history and badges next) must be declared inside the logged-in Stack.Protected group in app/_layout.js
 - Task edit form gets the task through route params (there is no "get one task" endpoint)
-- TypeScript leftovers from the starter (tsconfig.json, expo-env.d.ts) are kept; all our code is plain JavaScript (listed in docs/STRUCTURE.md)
-- After changing mobile/.env, restart Expo with `npx expo start -c`
+- A session's session_date is the phone's local date when the session STARTED
+- StreakCard shows "10 minutes" as plain text (display only); the backend decides what counts as an active day
 - Dark mode is planned for Phase 2, Step 13. Colors live in src/constants/theme.js.
+- After changing mobile/.env, restart Expo with `npx expo start -c`
 - A VS Code Copilot suggestion sometimes shows grey text in the terminal; ignore it and press Ctrl+C
 - Backend test blocks that start with `node --input-type=module <<'EOF'` must be run from ~/taskgo/backend
 - Two terminals are in use: the Expo terminal (stays busy) and a free terminal for other commands
@@ -69,16 +75,16 @@
 - supabase/schema.sql, supabase/seed.sql
 - backend/: package.json, package-lock.json, .env (not committed), .env.example, and all files in src/ listed in docs/STRUCTURE.md
 - mobile/: package.json, app.json, .env (not committed), .env.example, plus Expo starter files listed in docs/STRUCTURE.md
-- mobile/app/_layout.js, index.js, task-form.js, (auth)/_layout.js, login.js, register.js, (tabs)/_layout.js, home.js, tasks.js, profile.js (all real), timer.js, progress.js (placeholders)
+- mobile/app/_layout.js, index.js, task-form.js, (auth)/_layout.js, login.js, register.js, (tabs)/_layout.js, home.js, tasks.js, timer.js, profile.js (all real), progress.js (placeholder)
 - mobile/src/constants/theme.js, config.js
 - mobile/src/lib/supabase.js, api.js
 - mobile/src/context/AuthContext.js
-- mobile/src/utils/date.js, format.js
-- mobile/src/components/ScreenContainer.js, Card.js, Button.js, Input.js, LoadingView.js, EmptyState.js, ProgressRing.js, StreakCard.js, DeadlineCard.js, TaskItem.js, BadgePopup.js
+- mobile/src/utils/date.js, format.js, alarm.js
+- mobile/src/components/ScreenContainer.js, Card.js, Button.js, Input.js, LoadingView.js, EmptyState.js, ProgressRing.js, StreakCard.js, DeadlineCard.js, TaskItem.js, BadgePopup.js, CustomTimerModal.js
 
 ## Env variable names (no secrets)
 - Backend: PORT, SUPABASE_URL, SUPABASE_ANON_KEY
 - Mobile: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_URL
 
 ## Hours used so far
-- (17)
+- (24 hours)
