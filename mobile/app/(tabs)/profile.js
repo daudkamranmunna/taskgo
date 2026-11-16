@@ -1,4 +1,4 @@
-// Profile screen: your name, daily goal (editable), badges link, app info and logout.
+// Profile screen: your name, level and XP, daily goal (editable), badges link, app info and logout.
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import Card from '../../src/components/Card';
 import Button from '../../src/components/Button';
 import EmptyState from '../../src/components/EmptyState';
 import LoadingView from '../../src/components/LoadingView';
+import XPBar from '../../src/components/XPBar';
 import { useAuth } from '../../src/context/AuthContext';
 import { api } from '../../src/lib/api';
 import { formatMinutes } from '../../src/utils/format';
@@ -27,6 +28,7 @@ export default function Profile() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [xp, setXp] = useState(null); // optional: stays null if it could not be loaded
   const [goal, setGoal] = useState(60); // the goal being edited (not saved yet)
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,16 +38,22 @@ export default function Profile() {
 
   const load = useCallback(async () => {
     setError('');
-    try {
-      const data = await api.getProfile();
-      setProfile(data);
-      setGoal(data.daily_goal_minutes);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    // The profile is essential. The XP is optional.
+    const [profileResult, xpResult] = await Promise.allSettled([
+      api.getProfile(),
+      api.getXp(),
+    ]);
+
+    if (profileResult.status === 'rejected') {
+      setError(profileResult.reason.message || 'Something went wrong.');
+    } else {
+      setProfile(profileResult.value);
+      setGoal(profileResult.value.daily_goal_minutes);
+      if (xpResult.status === 'fulfilled') setXp(xpResult.value);
     }
+
+    setLoading(false);
+    setRefreshing(false);
   }, []);
 
   // Load (again) every time this tab comes into view
@@ -123,6 +131,13 @@ export default function Profile() {
     <ScreenContainer refreshing={refreshing} onRefresh={handleRefresh}>
       <Text style={styles.heading}>Profile</Text>
 
+      {/* A failed refresh keeps the old numbers and shows a small warning */}
+      {error ? (
+        <View style={styles.banner}>
+          <Text style={styles.bannerText}>Could not refresh: {error}</Text>
+        </View>
+      ) : null}
+
       {/* Who you are */}
       <Card style={styles.whoCard}>
         <View style={styles.avatar}>
@@ -131,6 +146,9 @@ export default function Profile() {
         <Text style={styles.name}>{profile.display_name || 'Student'}</Text>
         <Text style={styles.email}>{user ? user.email : ''}</Text>
       </Card>
+
+      {/* Level and XP (optional: hidden if it could not be loaded) */}
+      {xp ? <XPBar xp={xp} showHelp /> : null}
 
       {/* Daily goal */}
       <Card>
@@ -204,6 +222,15 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.lg,
   },
+  banner: {
+    borderWidth: 1.5,
+    borderColor: colors.danger,
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  bannerText: { color: colors.danger, fontSize: fontSize.small },
   whoCard: { alignItems: 'center' },
   avatar: {
     width: 72,

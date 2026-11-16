@@ -1,4 +1,4 @@
-// Home screen: greeting, streak, today's goal ring, deadlines and a quote.
+// Home screen: greeting, streak, level, today's goal ring, deadlines and a quote.
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import EmptyState from '../../src/components/EmptyState';
 import LoadingView from '../../src/components/LoadingView';
 import ProgressRing from '../../src/components/ProgressRing';
 import StreakCard from '../../src/components/StreakCard';
+import XPBar from '../../src/components/XPBar';
 import DeadlineCard from '../../src/components/DeadlineCard';
 import { api } from '../../src/lib/api';
 import { todayString } from '../../src/utils/date';
@@ -36,12 +37,13 @@ export default function Home() {
     const today = todayString(); // the phone's own date, sent to the backend
     const wantQuote = newQuote || quoteRef.current === null;
 
-    const [profile, stats, streak, upcoming, quote] = await Promise.allSettled([
+    const [profile, stats, streak, upcoming, quote, xp] = await Promise.allSettled([
       api.getProfile(),
       api.getTodayStats(today),
       api.getStreak(today),
       api.getUpcomingTasks(today),
       wantQuote ? api.getRandomQuote() : Promise.resolve(quoteRef.current),
+      api.getXp(),
     ]);
 
     // Profile, today's stats and the streak are essential. The rest is optional.
@@ -56,6 +58,7 @@ export default function Home() {
         streak: streak.value,
         upcoming: upcoming.status === 'fulfilled' ? upcoming.value : [],
         quote: quoteRef.current,
+        xp: xp.status === 'fulfilled' ? xp.value : null,
       });
     }
 
@@ -107,7 +110,7 @@ export default function Home() {
     );
   }
 
-  const { profile, stats, streak, upcoming, quote } = data;
+  const { profile, stats, streak, upcoming, quote, xp } = data;
   const progress = stats.goal_minutes > 0 ? stats.minutes_today / stats.goal_minutes : 0;
   const minutesLeft = Math.max(0, stats.goal_minutes - stats.minutes_today);
 
@@ -130,6 +133,9 @@ export default function Home() {
         longest={streak.longest_streak}
         activeToday={streak.active_today}
       />
+
+      {/* Level and XP (optional: hidden if it could not be loaded) */}
+      {xp ? <XPBar xp={xp} /> : null}
 
       <Card style={styles.goalCard}>
         <Text style={styles.cardTitle}>Today's goal</Text>

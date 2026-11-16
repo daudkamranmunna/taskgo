@@ -10,13 +10,13 @@
 - Step 9 (Tasks): DONE (list, add/edit form with date picker, mark done, delete, badge popup)
 - Step 10 (Timer): DONE (stopwatch + countdowns, custom minutes, ringing alarm via alarm.js, session saving, note, "Mark this task as done?", badges)
 - Step 11 (Progress, History, Badges): DONE
-  - app/(tabs)/progress.js: weekly BarChart (plain views), Total / Daily average / Best day cards, 28-day StreakCalendar (weeks Monday to Sunday), buttons to History and Badges; pull to refresh; error banner keeps old data
-  - app/history.js (stack screen): sessions grouped by day with day totals ("Today", "Yesterday", dates), SessionItem rows (subject, start time, length, linked task title, note), delete with confirmation, Load more after 50 sessions, pull to refresh
-  - app/badges.js (stack screen): grid of all badges (BadgeItem), earned colored with date, locked gray with requirement, "N of 10 unlocked"; opened from Progress and Profile
-  - Components added: BarChart, StreakCalendar, SessionItem, BadgeItem
-  - All checked on the phone against Home and Supabase data
+  - Progress: weekly BarChart (plain views), Total / Daily average / Best day cards, 28-day StreakCalendar (weeks Monday to Sunday), buttons to History and Badges
+  - History (app/history.js): sessions grouped by day with day totals, linked task title and note, delete with confirmation, Load more after 50 sessions
+  - Badges (app/badges.js): grid of all badges, earned colored with date, locked gray with requirement; opened from Progress and Profile
+  - STRETCH done: XPBar (src/components/XPBar.js) on Home (below the streak card) and Profile (with a "how to earn XP" note); uses GET /api/stats/xp; hidden if XP fails to load (optional on both screens)
+  - All checked on the phone against Supabase data
 
-=== PHASE 1 COMPLETE ===
+=== PHASE 1 COMPLETE (about 80%) ===
 
 ## Deployment
 - Public API URL (use as EXPO_PUBLIC_API_URL): PASTE-YOUR-RENDER-URL-HERE
@@ -24,12 +24,14 @@
 - Render redeploys automatically when new commits are pushed to main
 
 ## Current
-- Decide the STRETCH: XPBar with level on Home and Profile (backend GET /api/stats/xp already exists). Only if on schedule.
-- Then Phase 2:
-  - Step 12: full Notes screen (new notes table, endpoints, files: update all docs first)
-  - Step 13: dark mode (colors live in src/constants/theme.js; components import fixed colors today, so each screen needs updating)
-  - Step 14: polish (loading/empty/error states everywhere, haptics, small animations, app icon + splash + app name TaskGo, validation, bug fixing, remove the sample data)
-  - Step 15: final README (description, features, tech, setup, screenshots), final docs, optional Android APK via EAS, demo checklist for the teacher, final push
+- PHASE 2, Step 12: full Notes screen. Update ALL docs first (docs/DATABASE.md, docs/API.md, docs/STRUCTURE.md, supabase/schema.sql), then run the new SQL in Supabase, then backend (routes/controller), then the mobile screens. Do not build before the design is confirmed with the user.
+- Then Step 13 dark mode, Step 14 polish (+ remove sample data), Step 15 README + optional APK + demo checklist
+
+## Phase 2 plan
+- Step 12: full Notes screen (new notes table, endpoints, files: update all docs first)
+- Step 13: dark mode (colors live in src/constants/theme.js; components import fixed colors today, so each screen needs updating)
+- Step 14: polish (loading/empty/error states everywhere, haptics, small animations, app icon + splash + app name TaskGo, validation, bug fixing, remove the sample data)
+- Step 15: final README (description, features, tech, setup, screenshots), final docs, optional Android APK via EAS, demo checklist for the teacher, final push
 
 ## Known limitations (explain honestly in the README)
 - The running timer lives in the app's memory. If the app is swiped away completely while a timer runs, that session is lost (a scheduled alarm still rings). Backgrounding and locking the phone are fine.
@@ -51,7 +53,7 @@
 - best_day is { date: null, minutes: 0 } when nothing was studied this week
 - XP: xp_for_next_level means the size of the current level, so progress = xp_into_level / xp_for_next_level (documented in API.md)
 - There are THREE _layout.js files: app/_layout.js (root, with the route guard), app/(tabs)/_layout.js (tab bar), app/(auth)/_layout.js (plain Stack). Do not mix them up.
-- Stack screens outside the tabs (task-form, history, badges) are declared inside the logged-in Stack.Protected group in app/_layout.js; any new one must be added there
+- Stack screens outside the tabs (task-form, history, badges) are declared inside the logged-in Stack.Protected group in app/_layout.js; any new one (for example the notes screens) must be added there
 - Task edit form gets the task through route params (there is no "get one task" endpoint)
 - A session's session_date is the phone's local date when the session STARTED
 - StreakCard shows "10 minutes" as plain text (display only); the backend decides what counts as an active day
@@ -76,12 +78,11 @@
 - mobile/src/lib/supabase.js, api.js
 - mobile/src/context/AuthContext.js
 - mobile/src/utils/date.js, format.js, alarm.js
-- mobile/src/components/ScreenContainer.js, Card.js, Button.js, Input.js, LoadingView.js, EmptyState.js, ProgressRing.js, StreakCard.js, DeadlineCard.js, TaskItem.js, BadgePopup.js, CustomTimerModal.js, BarChart.js, StreakCalendar.js, SessionItem.js, BadgeItem.js
-- Not built yet (listed in docs/STRUCTURE.md): components/XPBar.js (stretch)
+- mobile/src/components/ScreenContainer.js, Card.js, Button.js, Input.js, LoadingView.js, EmptyState.js, ProgressRing.js, StreakCard.js, DeadlineCard.js, TaskItem.js, BadgePopup.js, CustomTimerModal.js, BarChart.js, StreakCalendar.js, SessionItem.js, BadgeItem.js, XPBar.js
 
 ## Env variable names (no secrets)
 - Backend: PORT, SUPABASE_URL, SUPABASE_ANON_KEY
 - Mobile: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_URL
 
 ## Hours used so far
-- (25 hours)
+- About 25 hours (Phase 1 planned: about 30)
